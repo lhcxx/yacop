@@ -8,6 +8,7 @@ import org.apache.hadoop.yarn.applications.narwhal.common.DateUtil;
 import org.apache.hadoop.yarn.applications.narwhal.common.ImageUtil;
 import org.apache.hadoop.yarn.applications.narwhal.common.NRegistryOperator;
 import org.apache.hadoop.yarn.applications.narwhal.common.NarwhalConstant;
+import org.apache.hadoop.yarn.applications.narwhal.config.NarwhalConfig;
 import org.apache.hadoop.yarn.applications.narwhal.event.*;
 import org.apache.hadoop.yarn.applications.narwhal.state.TaskState;
 import org.apache.hadoop.yarn.applications.narwhal.job.JobId;
@@ -52,6 +53,7 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
   private int pri;
   private String imageName;
   private boolean isUsingLocalImage;
+  private NarwhalConfig narwhalConfig;
 
   private LinkedHashMap<WorkerId, Worker> workers = new LinkedHashMap<>();
   private final EventHandler eventHandler;
@@ -82,9 +84,13 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
   private static final KillTransition KILL_TRANSITION =
       new KillTransition();
 
+  public NarwhalConfig getNarwhalConfig() {
+    return narwhalConfig;
+  }
+
   public NTaskImpl(JobId jobId, int id, EventHandler eventHandler,
                    String userCmd, int cpu, int mem, int pri,
-                   String imageName, boolean useLocalImage, String appName, NRegistryOperator nRegistryOperator) {
+                   String imageName, boolean useLocalImage, String appName, NRegistryOperator nRegistryOperator, NarwhalConfig narwhalConfig) {
     this.eventHandler = eventHandler;
     this.taskId = new TaskId(jobId, id);
     this.stateMachine = stateMachineFactory.make(this);
@@ -99,6 +105,7 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
     this.imageName = imageName;
     this.appName = appName;
     this.nRegistryOperator = nRegistryOperator;
+    this.narwhalConfig = narwhalConfig;
   }
 
   private static class ErrorTransition implements
@@ -164,7 +171,7 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
         String resourcePath = ImageUtil.getFSFilePathSuffix(nTask.getAppName(), nTask.getAppId(), resourceName);
         String workerCmd = "docker load -i ./" + resourceName;
         NWorkerImpl worker = new NWorkerImpl(taskEvent.getTaskID(), 0,
-            nTask.eventHandler, hostname, workerCmd, resourceName, resourcePath);
+            nTask.eventHandler, hostname, workerCmd, resourceName, resourcePath, nTask.getNarwhalConfig());
         nTask.eventHandler.handle(new WorkerEvent(worker.getID(),
             WorkerEventType.WORKER_SCHEDULE));
         nTask.addWorker(worker);
@@ -220,6 +227,7 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
           ContainerLauncherEventType.CONATAINERLAUNCHER_LAUNCH);
       containerLauncherEvent.setUserCmd(nTask.getUserCmd());
       containerLauncherEvent.setDockerImageName(nTask.getImageName());
+      containerLauncherEvent.setNarwhalConfig(nTask.getNarwhalConfig());
       nTask.eventHandler.handle(containerLauncherEvent);
     }
 

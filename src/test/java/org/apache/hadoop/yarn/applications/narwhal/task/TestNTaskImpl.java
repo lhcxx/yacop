@@ -14,6 +14,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.applications.narwhal.NAppMaster.AppContext;
 import org.apache.hadoop.yarn.applications.narwhal.common.NRegistryOperator;
+import org.apache.hadoop.yarn.applications.narwhal.config.NarwhalConfig;
 import org.apache.hadoop.yarn.applications.narwhal.dispatcher.JobEventDispatcher;
 import org.apache.hadoop.yarn.applications.narwhal.dispatcher.TaskEventDispatcher;
 import org.apache.hadoop.yarn.applications.narwhal.dispatcher.WorkerEventDispatcher;
@@ -31,6 +32,7 @@ import org.apache.hadoop.yarn.applications.narwhal.job.NJobImpl;
 import org.apache.hadoop.yarn.applications.narwhal.service.ContainerAllocator;
 import org.apache.hadoop.yarn.applications.narwhal.service.ContainerLauncher;
 import org.apache.hadoop.yarn.applications.narwhal.state.TaskState;
+import org.apache.hadoop.yarn.applications.narwhal.utils.TestUtils;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.util.ConverterUtils;
@@ -124,7 +126,8 @@ public class TestNTaskImpl {
     NJobImpl nJob = mock(NJobImpl.class);
     when(appContext.getJob()).thenReturn(nJob);
     JobId jobId = new JobId(ConverterUtils.toApplicationAttemptId(applicationAttemptId.toString()));
-    nTask = new NTaskImpl(jobId, 1, appContext.getEventHandler(), cmd, cpus, mem, 0, image, isUsingLocalImage, name, nRegistryOperator);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null);
+    nTask = new NTaskImpl(jobId, 1, appContext.getEventHandler(), cmd, cpus, mem, 0, image, isUsingLocalImage, name, nRegistryOperator,narwhalConfig);
     when(nJob.getTask(nTask.getID())).thenReturn(nTask);
   }
 

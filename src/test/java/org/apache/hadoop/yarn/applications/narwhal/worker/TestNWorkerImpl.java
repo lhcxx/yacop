@@ -3,6 +3,7 @@ package org.apache.hadoop.yarn.applications.narwhal.worker;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.applications.narwhal.NAppMaster.AppContext;
+import org.apache.hadoop.yarn.applications.narwhal.config.NarwhalConfig;
 import org.apache.hadoop.yarn.applications.narwhal.dispatcher.TaskEventDispatcher;
 import org.apache.hadoop.yarn.applications.narwhal.dispatcher.WorkerEventDispatcher;
 import org.apache.hadoop.yarn.applications.narwhal.event.ContainerAllocatorEvent;
@@ -17,6 +18,7 @@ import org.apache.hadoop.yarn.applications.narwhal.service.ContainerAllocator;
 import org.apache.hadoop.yarn.applications.narwhal.service.ContainerLauncher;
 import org.apache.hadoop.yarn.applications.narwhal.state.WorkerState;
 import org.apache.hadoop.yarn.applications.narwhal.task.TaskId;
+import org.apache.hadoop.yarn.applications.narwhal.utils.TestUtils;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.junit.After;
@@ -64,7 +66,8 @@ public class TestNWorkerImpl {
     String workerCmd = "echo hello";
     String resourceName = "centos_yarn";
     String resourcePath = "centos_yarn_path";
-    nWorker = new NWorkerImpl(taskId, 1, appContext.getEventHandler(), hostname, workerCmd, resourceName, resourcePath);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null);
+    nWorker = new NWorkerImpl(taskId, 1, appContext.getEventHandler(), hostname, workerCmd, resourceName, resourcePath,narwhalConfig);
   }
 
   @Test

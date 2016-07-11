@@ -12,6 +12,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.applications.narwhal.NAppMaster;
+import org.apache.hadoop.yarn.applications.narwhal.config.NarwhalConfig;
+import org.apache.hadoop.yarn.applications.narwhal.config.VolumeConfig;
 import org.apache.hadoop.yarn.applications.narwhal.event.*;
 import org.apache.hadoop.yarn.applications.narwhal.task.ExecutorID;
 import org.apache.hadoop.yarn.applications.narwhal.task.TaskId;
@@ -97,7 +99,7 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
   }
 
   private ContainerLaunchContext buildContainerContext(String cmd, String image,
-                                                       boolean useDocker, Map<String, LocalResource> localResources ) {
+                                                       boolean useDocker, Map<String, LocalResource> localResources, NarwhalConfig narwhalConfig) {
     ContainerLaunchContext ctx = null;
     try {
       //env
@@ -105,6 +107,8 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
       if (useDocker) {
         env.put("YARN_CONTAINER_RUNTIME_TYPE", "docker");
         env.put("YARN_CONTAINER_RUNTIME_DOCKER_IMAGE", image);
+        if (narwhalConfig.getVolumeConfigs() != null)
+          env.put("ENV_DOCKER_CONTAINER_LOCAL_RESOURCE_MOUNTS", getMountVolumePairList(narwhalConfig));
       }
       List<String> commands = new ArrayList<>();
       //cmd
@@ -132,12 +136,23 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
     return ctx;
   }
 
+  public String getMountVolumePairList(NarwhalConfig narwhalConfig) {
+    StringBuilder volumesList = new StringBuilder();
+    String prefix = "";
+    for (VolumeConfig vc : narwhalConfig.getVolumeConfigs()) {
+      volumesList.append(prefix);
+      prefix = ",";
+      volumesList.append(vc.getHostPath()).append(":").append(vc.getContainerPath());
+    }
+    return volumesList.toString();
+  }
+
   private void launchContainer(ContainerLauncherEvent event) {
     LOG.info("start container");
     String userCmd = event.getUserCmd();
     ContainerLaunchContext ctx = null;
     if (event.getId() instanceof TaskId) {
-       ctx = buildContainerContext(userCmd, event.getDockerImageName(), true, null);
+       ctx = buildContainerContext(userCmd, event.getDockerImageName(), true, null, event.getNarwhalConfig());
     } else {
       Map<String, LocalResource> localResources = new HashMap<>();
       String resourceFileName = event.getResourceFileName();
@@ -160,7 +175,7 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
           e.printStackTrace();
         }
       }
-      ctx = buildContainerContext(userCmd, null, false, localResources);
+      ctx = buildContainerContext(userCmd, null, false, localResources, event.getNarwhalConfig());
     }
     if (ctx == null) {
       LOG.info("ContainerLaunchContext is null");

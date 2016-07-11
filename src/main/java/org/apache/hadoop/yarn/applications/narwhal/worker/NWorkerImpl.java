@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.applications.narwhal.config.NarwhalConfig;
 import org.apache.hadoop.yarn.applications.narwhal.event.*;
 import org.apache.hadoop.yarn.applications.narwhal.state.WorkerState;
 import org.apache.hadoop.yarn.applications.narwhal.task.TaskId;
@@ -39,9 +40,14 @@ public class NWorkerImpl implements Worker, EventHandler<WorkerEvent> {
   private Lock writeLock;
   private final EventHandler eventHandler;
   private final StateMachine<WorkerState, WorkerEventType, WorkerEvent> stateMachine;
+  private NarwhalConfig narwhalConfig;
 
   public String getCmd() {
     return cmd;
+  }
+
+  public NarwhalConfig getNarwhalConfig() {
+    return narwhalConfig;
   }
 
   private static class ScheduleTransition implements
@@ -83,6 +89,7 @@ public class NWorkerImpl implements Worker, EventHandler<WorkerEvent> {
       containerLauncherEvent.setUserCmd(nWorker.getCmd());
       containerLauncherEvent.setResourceFileName(nWorker.getResourceName());
       containerLauncherEvent.setResourceFilePath(nWorker.getResourcePath());
+      containerLauncherEvent.setNarwhalConfig(nWorker.getNarwhalConfig());
       nWorker.eventHandler.handle(containerLauncherEvent);
     }
   }
@@ -135,7 +142,7 @@ public class NWorkerImpl implements Worker, EventHandler<WorkerEvent> {
       .installTopology();
 
   public NWorkerImpl(TaskId taskId, int id, EventHandler eventHandler,
-                     String hostname, String cmd, String resourceName, String resourcePath) {
+                     String hostname, String cmd, String resourceName, String resourcePath, NarwhalConfig narwhalConfig) {
     this.hostname = hostname;
     this.workerId = new WorkerId(taskId,id);
     this.eventHandler = eventHandler;
@@ -145,6 +152,7 @@ public class NWorkerImpl implements Worker, EventHandler<WorkerEvent> {
     this.cmd = cmd;
     this.resourceName = resourceName;
     this.resourcePath = resourcePath;
+    this.narwhalConfig = narwhalConfig;
   }
 
   @Override

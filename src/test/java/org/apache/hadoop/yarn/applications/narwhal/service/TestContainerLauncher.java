@@ -9,11 +9,16 @@ import static org.mockito.Mockito.times;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.hadoop.io.ArrayFile;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.applications.narwhal.NAppMaster.AppContext;
+import org.apache.hadoop.yarn.applications.narwhal.config.NarwhalConfig;
+import org.apache.hadoop.yarn.applications.narwhal.config.VolumeConfig;
 import org.apache.hadoop.yarn.applications.narwhal.dispatcher.JobEventDispatcher;
 import org.apache.hadoop.yarn.applications.narwhal.event.ContainerAllocatorEvent;
 import org.apache.hadoop.yarn.applications.narwhal.event.ContainerAllocatorEventType;
@@ -24,6 +29,7 @@ import org.apache.hadoop.yarn.applications.narwhal.job.NJobImpl;
 import org.apache.hadoop.yarn.applications.narwhal.service.ContainerLauncher.NMCallback;
 import org.apache.hadoop.yarn.applications.narwhal.task.ExecutorID;
 import org.apache.hadoop.yarn.applications.narwhal.task.TaskId;
+import org.apache.hadoop.yarn.applications.narwhal.utils.TestUtils;
 import org.apache.hadoop.yarn.applications.narwhal.worker.WorkerId;
 import org.apache.hadoop.yarn.client.api.async.NMClientAsync;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -77,6 +83,8 @@ public class TestContainerLauncher {
     String image = "centos_yarn";
     containerLauncherEvent.setUserCmd(cmd);
     containerLauncherEvent.setDockerImageName(image);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null);
+    containerLauncherEvent.setNarwhalConfig(narwhalConfig);
     containerLauncher.processEvent(containerLauncherEvent);
     sleep(1000);
     Field scheduledContainersField = containerLauncher.getClass().getDeclaredField("scheduledContainers");
@@ -148,6 +156,21 @@ public class TestContainerLauncher {
     nmCallback.onContainerStarted(mock(ContainerId.class), null);
     sleep(1000);
     verify(containerAllocator, times(0)).handle(Matchers.any(ContainerAllocatorEvent.class));
+  }
+
+  @Test
+  public void testgetMountVolumePairList() {
+    List<VolumeConfig> volumeConfigList = new ArrayList<>();
+    VolumeConfig test_volumeConfig_1 = TestUtils.mockVolumeConfig("/etc/a", "/var/data/a","RO");
+    VolumeConfig test_volumeConfig_2 = TestUtils.mockVolumeConfig("/etc/b", "/var/data/b","RO");
+    VolumeConfig test_volumeConfig_3 = TestUtils.mockVolumeConfig("/etc/c", "/var/data/c","RO");
+    volumeConfigList.add(test_volumeConfig_1);
+    volumeConfigList.add(test_volumeConfig_2);
+    volumeConfigList.add(test_volumeConfig_3);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,volumeConfigList);
+    String expected = "/var/data/a:/etc/a,/var/data/b:/etc/b,/var/data/c:/etc/c";
+    String actual = containerLauncher.getMountVolumePairList(narwhalConfig);
+    assertEquals(expected, actual);
   }
 
   private void mockNMClientAsync() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {

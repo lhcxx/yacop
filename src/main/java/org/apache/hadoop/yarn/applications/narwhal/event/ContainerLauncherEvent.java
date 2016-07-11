@@ -1,6 +1,7 @@
 package org.apache.hadoop.yarn.applications.narwhal.event;
 
 import org.apache.hadoop.yarn.api.records.Container;
+import org.apache.hadoop.yarn.applications.narwhal.config.NarwhalConfig;
 import org.apache.hadoop.yarn.applications.narwhal.task.ExecutorID;
 import org.apache.hadoop.yarn.applications.narwhal.worker.WorkerId;
 import org.apache.hadoop.yarn.event.AbstractEvent;
@@ -20,6 +21,8 @@ public class ContainerLauncherEvent extends AbstractEvent<ContainerLauncherEvent
   private String resourceFileName;
 
   private String resourceFilePath;
+
+  private NarwhalConfig narwhalConfig;
 
   public ContainerLauncherEvent(ExecutorID id, Container container,
                                 ContainerLauncherEventType type) {
@@ -70,5 +73,13 @@ public class ContainerLauncherEvent extends AbstractEvent<ContainerLauncherEvent
 
   public void setResourceFilePath(String resourceFilePath) {
     this.resourceFilePath = resourceFilePath;
+  }
+
+  public NarwhalConfig getNarwhalConfig() {
+    return narwhalConfig;
+  }
+
+  public void setNarwhalConfig(NarwhalConfig narwhalConfig) {
+    this.narwhalConfig = narwhalConfig;
   }
 }

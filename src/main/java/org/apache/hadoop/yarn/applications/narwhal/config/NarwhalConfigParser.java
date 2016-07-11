@@ -35,7 +35,12 @@ public class NarwhalConfigParser {
         }
         if (obj.has("engine")) {
             JSONObject engineObj = obj.getJSONObject("engine");
-            EngineConfig engineConfig = parseEngineConfig(engineObj);
+            EngineConfig engineConfig = null;
+            try {
+                engineConfig = parseEngineConfig(engineObj);
+            } catch (JSONException e) {
+                throw new BuilderException("Invalid volume config");
+            }
             builder.engineConfig(engineConfig);
         }
         return builder.build();
@@ -54,9 +59,9 @@ public class NarwhalConfigParser {
             for (int i = 0; i < volumesObjArray.length(); i++) {
                 JSONObject volumeObj = volumesObjArray.getJSONObject(i);
                 engineBuilder.addVolume(new VolumeConfig.Builder()
-                        .containerPath(volumeObj.getString("containerPath"))
-                        .hostPath(volumeObj.getString("hostPath"))
-                        .mode(volumeObj.getString("mode")).build());
+                        .containerPath(volumeObj.getString("containerPath").trim())
+                        .hostPath(volumeObj.getString("hostPath").trim())
+                        .mode(volumeObj.getString("mode").trim()).build());
             }
         }
         return engineBuilder.build();
