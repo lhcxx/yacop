@@ -8,7 +8,7 @@ Narwhal is a YARN application for Docker container orchestration for YARN.
 
 - [x] Simple short-lived Docker container scheduling
 - [x] Retreive meta data of Docker container
-- [ ] Secured Docker container
+- [x] Enable Docker container access to secured Hadoop services
 - [x] Read only volume mount
 - [ ] Task re-run when failure
 - [ ] Application master fault tolerance
