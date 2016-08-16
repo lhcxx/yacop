@@ -79,11 +79,8 @@ public class TestContainerLauncher {
     when(taskId.getContainerId()).thenReturn(containerId);
     Container container = mock(Container.class);
     ContainerLauncherEvent containerLauncherEvent = new ContainerLauncherEvent(taskId, container, ContainerLauncherEventType.CONATAINERLAUNCHER_LAUNCH);
-    String cmd = "sleep 15; cat /proc/1/cgroup";
     String image = "centos_yarn";
-    containerLauncherEvent.setUserCmd(cmd);
-    containerLauncherEvent.setDockerImageName(image);
-    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null,"DOCKER");
     containerLauncherEvent.setNarwhalConfig(narwhalConfig);
     containerLauncher.processEvent(containerLauncherEvent);
     sleep(1000);
@@ -107,6 +104,8 @@ public class TestContainerLauncher {
     String resourceFilePath = "centos_yarn_path";
     containerLauncherEvent.setResourceFileName(resourceFileName);
     containerLauncherEvent.setResourceFilePath(resourceFilePath);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null,"DOCKER");
+    containerLauncherEvent.setNarwhalConfig(narwhalConfig);
     containerLauncher.processEvent(containerLauncherEvent);
     sleep(1000);
     Field scheduledContainersField = containerLauncher.getClass().getDeclaredField("scheduledContainers");
@@ -167,7 +166,7 @@ public class TestContainerLauncher {
     volumeConfigList.add(test_volumeConfig_1);
     volumeConfigList.add(test_volumeConfig_2);
     volumeConfigList.add(test_volumeConfig_3);
-    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,volumeConfigList);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,volumeConfigList,"DOCKER");
     String expected = "/var/data/a:/etc/a,/var/data/b:/etc/b,/var/data/c:/etc/c";
     String actual = containerLauncher.getMountVolumePairList(narwhalConfig);
     assertEquals(expected, actual);

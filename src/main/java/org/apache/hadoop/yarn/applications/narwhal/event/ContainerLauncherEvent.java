@@ -14,10 +14,6 @@ public class ContainerLauncherEvent extends AbstractEvent<ContainerLauncherEvent
 
   private Container container;
 
-  private String userCmd;
-
-  private String dockerImageName;
-
   private String resourceFileName;
 
   private String resourceFilePath;
@@ -41,22 +37,6 @@ public class ContainerLauncherEvent extends AbstractEvent<ContainerLauncherEvent
 
   public Container getContainer() {
     return container;
-  }
-
-  public String getUserCmd() {
-    return userCmd;
-  }
-
-  public void setUserCmd(String userCmd) {
-    this.userCmd = userCmd;
-  }
-
-  public void setDockerImageName(String dockerImageName) {
-    this.dockerImageName = dockerImageName;
-  }
-
-  public String getDockerImageName() {
-    return dockerImageName;
   }
 
   public String getResourceFileName() {
