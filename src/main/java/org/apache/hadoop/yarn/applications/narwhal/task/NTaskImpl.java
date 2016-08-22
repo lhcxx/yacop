@@ -45,14 +45,7 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
   private Container container;
 
   //task config info
-  private String appName;
-  private String appId;
-  private String userCmd;
-  private int mem;
-  private int cpu;
   private int pri;
-  private String imageName;
-  private boolean isUsingLocalImage;
   private NarwhalConfig narwhalConfig;
 
   private LinkedHashMap<WorkerId, Worker> workers = new LinkedHashMap<>();
@@ -60,14 +53,6 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
   private NRegistryOperator nRegistryOperator;
 
   private final StateMachine<TaskState, TaskEventType, TaskEvent> stateMachine;
-
-  public String getUserCmd() {
-    return userCmd;
-  }
-
-  public String getImageName() {
-    return imageName;
-  }
 
   public void setContainer(Container container) {
     LOG.info(getID() + " got container:" + container.getId());
@@ -88,22 +73,14 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
     return narwhalConfig;
   }
 
-  public NTaskImpl(JobId jobId, int id, EventHandler eventHandler,
-                   String userCmd, int cpu, int mem, int pri,
-                   String imageName, boolean useLocalImage, String appName, NRegistryOperator nRegistryOperator, NarwhalConfig narwhalConfig) {
+  public NTaskImpl(JobId jobId, int id, EventHandler eventHandler, int pri, NRegistryOperator nRegistryOperator, NarwhalConfig narwhalConfig) {
     this.eventHandler = eventHandler;
     this.taskId = new TaskId(jobId, id);
     this.stateMachine = stateMachineFactory.make(this);
     ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     this.readLock = readWriteLock.readLock();
     this.writeLock = readWriteLock.writeLock();
-    this.userCmd = userCmd;
-    this.mem = mem;
-    this.cpu = cpu;
     this.pri = pri;
-    this.isUsingLocalImage = useLocalImage;
-    this.imageName = imageName;
-    this.appName = appName;
     this.nRegistryOperator = nRegistryOperator;
     this.narwhalConfig = narwhalConfig;
   }
@@ -126,7 +103,7 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
       //post an event to ContainerAllocator for allocate container
       ContainerAllocatorEvent containerAllocatorEvent = new ContainerAllocatorEvent(nTask.getID(),
           ContainerAllocatorEventType.CONTAINERALLOCATOR_REQEUST);
-      Resource capability = Resource.newInstance(nTask.getMem(),nTask.getCpu());
+      Resource capability = Resource.newInstance((int)nTask.getNarwhalConfig().getMem(),(int)nTask.getNarwhalConfig().getCpus());
       containerAllocatorEvent.setCapability(capability);
       containerAllocatorEvent.setPriority(nTask.getPri());
       containerAllocatorEvent.setHostname("");
@@ -157,7 +134,7 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
       }
       //if need to load image file , new a worker and post event to run it
       //when worker succeed in loading image, post a TASK_LAUNCH event
-      if (nTask.isUsingLocalImage) {
+      if (nTask.getNarwhalConfig().isEngineLocalImage()) {
         if (currentWorkerSucceed(nTask)) {
           LOG.info("All " + nTask.getID() + " 's worker finished");
           nTask.workers.clear();
@@ -167,8 +144,8 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
         LOG.info("** new Worker **");
         String hostname = taskEvent.getContainer().getNodeId().getHost();
         //TODO: this should be docker load image file
-        String resourceName = ImageUtil.getFSFileName(nTask.getImageName());
-        String resourcePath = ImageUtil.getFSFilePathSuffix(nTask.getAppName(), nTask.getAppId(), resourceName);
+        String resourceName = ImageUtil.getFSFileName(nTask.getNarwhalConfig().getEngineImage());
+        String resourcePath = ImageUtil.getFSFilePathSuffix(nTask.getNarwhalConfig().getName(), nTask.getAppId(), resourceName);
         String workerCmd = "docker load -i ./" + resourceName;
         NWorkerImpl worker = new NWorkerImpl(taskEvent.getTaskID(), 0,
             nTask.eventHandler, hostname, workerCmd, resourceName, resourcePath, nTask.getNarwhalConfig());
@@ -225,15 +202,13 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
       ContainerLauncherEvent containerLauncherEvent = new ContainerLauncherEvent(taskEvent.getTaskID(),
           taskEvent.getContainer(),
           ContainerLauncherEventType.CONATAINERLAUNCHER_LAUNCH);
-      containerLauncherEvent.setUserCmd(nTask.getUserCmd());
-      containerLauncherEvent.setDockerImageName(nTask.getImageName());
       containerLauncherEvent.setNarwhalConfig(nTask.getNarwhalConfig());
       nTask.eventHandler.handle(containerLauncherEvent);
     }
 
     private void setContainerRunningRecord(NTaskImpl nTask) {
-      nTask.nRegistryOperator.setContainerRecord(nTask.container.getId().toString(), NarwhalConstant.COMMAND, nTask.userCmd);
-      nTask.nRegistryOperator.setContainerRecord(nTask.container.getId().toString(), NarwhalConstant.IMAGE, nTask.imageName);
+      nTask.nRegistryOperator.setContainerRecord(nTask.container.getId().toString(), NarwhalConstant.COMMAND, nTask.getNarwhalConfig().getCmd());
+      nTask.nRegistryOperator.setContainerRecord(nTask.container.getId().toString(), NarwhalConstant.IMAGE, nTask.getNarwhalConfig().getEngineImage());
       nTask.nRegistryOperator.setContainerRecord(nTask.container.getId().toString(), NarwhalConstant.STATUS, TaskState.RUNNING.toString());
       nTask.nRegistryOperator.updateContainer(nTask.container.getId().toString());
     }
@@ -345,28 +320,8 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
     workers.put(worker.getID(), worker);
   }
 
-  public int getMem() {
-    return mem;
-  }
-
-  public int getCpu() {
-    return cpu;
-  }
-
   public int getPri() {
     return pri;
-  }
-
-  public boolean isUsingLocalImage() {
-    return isUsingLocalImage;
-  }
-
-  public String getAppName() {
-    return appName;
-  }
-
-  public void setAppName(String appName) {
-    this.appName = appName;
   }
 
   public String getAppId() {

@@ -50,6 +50,8 @@ public class NarwhalConfigParser {
         EngineConfig.Builder engineBuilder = new EngineConfig.Builder();
         if (obj.has("type"))
             engineBuilder.type(obj.getString("type").trim());
+        else
+            engineBuilder.type("DOCKER");
         if (obj.has("image"))
             engineBuilder.image(obj.getString("image").trim());
         if (obj.has("localImage"))

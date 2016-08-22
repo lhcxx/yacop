@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-class EngineConfig implements Serializable {
+public class EngineConfig implements Serializable {
 
     private final String type;
 
@@ -22,11 +22,11 @@ class EngineConfig implements Serializable {
         this.volumeConfigs = builder.volumeConfigs;
     }
 
-    String getType() {
+    public String getType() {
         return type;
     }
 
-    String getImage() {
+    public String getImage() {
         return image;
     }
 
@@ -34,7 +34,7 @@ class EngineConfig implements Serializable {
         return localImage;
     }
 
-    List<VolumeConfig> getVolumeConfigs() {
+    public List<VolumeConfig> getVolumeConfigs() {
         return volumeConfigs;
     }
 

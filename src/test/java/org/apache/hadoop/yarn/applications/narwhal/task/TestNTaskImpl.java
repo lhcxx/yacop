@@ -108,9 +108,6 @@ public class TestNTaskImpl {
   }
 
   private void createNewTask(boolean isUsingLocalImage) {
-    String name = "yuqiang-docker";
-    String cmd = "sleep 15; cat /proc/1/cgroup";
-    String image = "centos_yarn";
     int cpus = 2;
     int mem = 2048;
 
@@ -126,8 +123,10 @@ public class TestNTaskImpl {
     NJobImpl nJob = mock(NJobImpl.class);
     when(appContext.getJob()).thenReturn(nJob);
     JobId jobId = new JobId(ConverterUtils.toApplicationAttemptId(applicationAttemptId.toString()));
-    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null);
-    nTask = new NTaskImpl(jobId, 1, appContext.getEventHandler(), cmd, cpus, mem, 0, image, isUsingLocalImage, name, nRegistryOperator,narwhalConfig);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null,"DOCKER");
+    if (isUsingLocalImage)
+      narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,true,null,"DOCKER");
+    nTask = new NTaskImpl(jobId, 1, appContext.getEventHandler(), 0, nRegistryOperator, narwhalConfig);
     when(nJob.getTask(nTask.getID())).thenReturn(nTask);
   }
 

@@ -86,7 +86,6 @@ public class NWorkerImpl implements Worker, EventHandler<WorkerEvent> {
       ContainerLauncherEvent containerLauncherEvent = new ContainerLauncherEvent(workerEvent.getWorkerId(),
           workerEvent.getContainer(),
           ContainerLauncherEventType.CONATAINERLAUNCHER_LAUNCH);
-      containerLauncherEvent.setUserCmd(nWorker.getCmd());
       containerLauncherEvent.setResourceFileName(nWorker.getResourceName());
       containerLauncherEvent.setResourceFilePath(nWorker.getResourcePath());
       containerLauncherEvent.setNarwhalConfig(nWorker.getNarwhalConfig());

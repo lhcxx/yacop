@@ -66,7 +66,7 @@ public class TestNWorkerImpl {
     String workerCmd = "echo hello";
     String resourceName = "centos_yarn";
     String resourcePath = "centos_yarn_path";
-    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null);
+    NarwhalConfig narwhalConfig = TestUtils.mockNarwhalConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,null,"DOCKER");
     nWorker = new NWorkerImpl(taskId, 1, appContext.getEventHandler(), hostname, workerCmd, resourceName, resourcePath,narwhalConfig);
   }
 

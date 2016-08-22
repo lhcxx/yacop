@@ -98,22 +98,21 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
     return nmClientAsync;
   }
 
-  private ContainerLaunchContext buildContainerContext(String cmd, String image,
-                                                       boolean useDocker, Map<String, LocalResource> localResources, NarwhalConfig narwhalConfig) {
+  private ContainerLaunchContext buildContainerContext(Map<String, LocalResource> localResources, NarwhalConfig narwhalConfig) {
     ContainerLaunchContext ctx = null;
     try {
       //env
       Map<String, String> env = new HashedMap();
-      if (useDocker) {
+      if (narwhalConfig.getEngineType().equals("DOCKER")) {
         env.put("YARN_CONTAINER_RUNTIME_TYPE", "docker");
-        env.put("YARN_CONTAINER_RUNTIME_DOCKER_IMAGE", image);
+        env.put("YARN_CONTAINER_RUNTIME_DOCKER_IMAGE", narwhalConfig.getEngineImage());
         if (narwhalConfig.getVolumeConfigs() != null)
           env.put("ENV_DOCKER_CONTAINER_LOCAL_RESOURCE_MOUNTS", getMountVolumePairList(narwhalConfig));
       }
       List<String> commands = new ArrayList<>();
       //cmd
       Vector<CharSequence> vargs = new Vector<>(5);
-      vargs.add("(" + cmd + ")");
+      vargs.add("(" + narwhalConfig.getCmd() + ")");
       vargs.add("1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout");
       vargs.add("2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr");
       StringBuilder command = new StringBuilder();
@@ -149,10 +148,9 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
 
   private void launchContainer(ContainerLauncherEvent event) {
     LOG.info("start container");
-    String userCmd = event.getUserCmd();
     ContainerLaunchContext ctx = null;
     if (event.getId() instanceof TaskId) {
-       ctx = buildContainerContext(userCmd, event.getDockerImageName(), true, null, event.getNarwhalConfig());
+       ctx = buildContainerContext(null, event.getNarwhalConfig());
     } else {
       Map<String, LocalResource> localResources = new HashMap<>();
       String resourceFileName = event.getResourceFileName();
@@ -175,7 +173,7 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
           e.printStackTrace();
         }
       }
-      ctx = buildContainerContext(userCmd, null, false, localResources, event.getNarwhalConfig());
+      ctx = buildContainerContext(localResources, event.getNarwhalConfig());
     }
     if (ctx == null) {
       LOG.info("ContainerLaunchContext is null");
