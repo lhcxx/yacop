@@ -107,7 +107,7 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
         env.put("YARN_CONTAINER_RUNTIME_TYPE", "docker");
         env.put("YARN_CONTAINER_RUNTIME_DOCKER_IMAGE", narwhalConfig.getEngineImage());
         if (narwhalConfig.getVolumeConfigs() != null)
-          env.put("YARN_CONTAINER_RUNTIME_DOCKER_RUN_PRIVILEGED_CONTAINER", getMountVolumePairList(narwhalConfig));
+          env.put("YARN_CONTAINER_RUNTIME_DOCKER_LOCAL_RESOURCE_MOUNTS", getMountVolumePairList(narwhalConfig));
       }
       List<String> commands = new ArrayList<>();
       //cmd
