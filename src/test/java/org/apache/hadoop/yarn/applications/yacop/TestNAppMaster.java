@@ -8,7 +8,7 @@ import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
-import org.apache.hadoop.yarn.applications.yacop.NAppMaster;
+import org.apache.hadoop.yarn.applications.yacop.config.YacopConfig;
 import org.apache.hadoop.yarn.applications.yacop.dispatcher.JobEventDispatcher;
 import org.apache.hadoop.yarn.applications.yacop.event.ContainerAllocatorEventType;
 import org.apache.hadoop.yarn.applications.yacop.event.ContainerLauncherEventType;
@@ -18,6 +18,7 @@ import org.apache.hadoop.yarn.applications.yacop.job.NJobImpl;
 import org.apache.hadoop.yarn.applications.yacop.service.ContainerAllocator;
 import org.apache.hadoop.yarn.applications.yacop.service.ContainerLauncher;
 import org.apache.hadoop.yarn.applications.yacop.state.JobState;
+import org.apache.hadoop.yarn.applications.yacop.utils.TestUtils;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.junit.After;
@@ -49,6 +50,7 @@ public class TestNAppMaster {
   private NJobImpl nJob;
   private static YarnConfiguration conf;
   private static TestingServer zkTestServer;
+  private NAppMaster.AppContext context;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -62,6 +64,7 @@ public class TestNAppMaster {
   public void setup() throws Exception {
     nAppMaster = new NAppMaster();
 
+    context = mock(NAppMaster.AppContext.class);
     applicationAttemptId = mock(ApplicationAttemptId.class);
     when(applicationAttemptId.toString()).thenReturn("appattempt_1465186316357_0001_000001");
     ApplicationId applicationId = mock(ApplicationId.class);
@@ -112,6 +115,14 @@ public class TestNAppMaster {
 
   @Test
   public void testInit() throws ParseException, IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+    YacopConfig yacopConfig = TestUtils.mockYacopConfig("simple-docker", "cat /proc/1/cgroup", "centos_yarn", 1.0, 32, 2, false, null, "DOCKER");
+    Field yacopConfigField = nAppMaster.getClass().getDeclaredField("yacopConfig");
+    yacopConfigField.setAccessible(true);
+    yacopConfigField.set(nAppMaster, yacopConfig);
+    Field appContextField = nAppMaster.getClass().getDeclaredField("context");
+    appContextField.setAccessible(true);
+    appContextField.set(nAppMaster, context);
+    when(context.getYacopConfig()).thenReturn(yacopConfig);
     nAppMaster.init(new String[]{});
     assertNotNull(dispatcher);
   }

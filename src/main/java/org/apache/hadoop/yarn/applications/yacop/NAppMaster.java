@@ -53,6 +53,7 @@ public class NAppMaster {
   
   public class AppContext{
     private final Configuration conf;
+    public YacopConfig getYacopConfig() { return yacopConfig; }
     public AppContext(Configuration conf) {
       this.conf = conf;
     }

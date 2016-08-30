@@ -1,33 +1,22 @@
 package org.apache.hadoop.yarn.applications.yacop.service;
 
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DataOutputBuffer;
-import org.apache.hadoop.security.Credentials;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.applications.yacop.NAppMaster;
 import org.apache.hadoop.yarn.applications.yacop.config.YacopConfig;
 import org.apache.hadoop.yarn.applications.yacop.config.VolumeConfig;
+import org.apache.hadoop.yarn.applications.yacop.engine.DelegatingYacopEngine;
 import org.apache.hadoop.yarn.applications.yacop.event.*;
 import org.apache.hadoop.yarn.applications.yacop.task.ExecutorID;
 import org.apache.hadoop.yarn.applications.yacop.task.TaskId;
 import org.apache.hadoop.yarn.client.api.async.NMClientAsync;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.AbstractEvent;
 import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
-import org.apache.hadoop.yarn.util.ConverterUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -44,9 +33,11 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
   private ConcurrentHashMap<ContainerId, ExecutorID> scheduledContainers =
       new ConcurrentHashMap<>();
 
+  private DelegatingYacopEngine delegatingYacopEngine;
 
   public ContainerLauncher(NAppMaster.AppContext context) {
     super(context);
+    delegatingYacopEngine = new DelegatingYacopEngine();
   }
 
   //TODO
@@ -98,85 +89,8 @@ public class ContainerLauncher extends EventLoop implements EventHandler<Contain
     return nmClientAsync;
   }
 
-  private ContainerLaunchContext buildContainerContext(Map<String, LocalResource> localResources, YacopConfig yacopConfig) {
-    ContainerLaunchContext ctx = null;
-    try {
-      //env
-      Map<String, String> env = new HashedMap();
-      if (yacopConfig.getEngineType().equals("DOCKER")) {
-        env.put("YARN_CONTAINER_RUNTIME_TYPE", "docker");
-        env.put("YARN_CONTAINER_RUNTIME_DOCKER_IMAGE", yacopConfig.getEngineImage());
-        if (yacopConfig.getVolumeConfigs() != null)
-          env.put("YARN_CONTAINER_RUNTIME_DOCKER_LOCAL_RESOURCE_MOUNTS", getMountVolumePairList(yacopConfig));
-        if (yacopConfig.getNetworkConfig() != null)
-          env.put("YARN_CONTAINER_RUNTIME_DOCKER_CONTAINER_NETWORK", yacopConfig.getNetworkConfig().getName());
-      }
-      List<String> commands = new ArrayList<>();
-      //cmd
-      Vector<CharSequence> vargs = new Vector<>(5);
-      vargs.add("(" + yacopConfig.getCmd() + ")");
-      vargs.add("1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout");
-      vargs.add("2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr");
-      StringBuilder command = new StringBuilder();
-      for (CharSequence str : vargs) {
-        command.append(str).append(" ");
-      }
-      commands.add(command.toString());
-      //tokens
-      Credentials credentials = UserGroupInformation.getCurrentUser().getCredentials();
-      DataOutputBuffer dob = new DataOutputBuffer();
-      credentials.writeTokenStorageToStream(dob);
-      ByteBuffer allTokens = ByteBuffer.wrap(dob.getData(), 0, dob.getLength());
-      //ctx
-      ctx = ContainerLaunchContext.newInstance(
-          localResources, env, commands, null, allTokens.duplicate(), null
-      );
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return ctx;
-  }
-
-  public String getMountVolumePairList(YacopConfig yacopConfig) {
-    StringBuilder volumesList = new StringBuilder();
-    String prefix = "";
-    for (VolumeConfig vc : yacopConfig.getVolumeConfigs()) {
-      volumesList.append(prefix);
-      prefix = ",";
-      volumesList.append(vc.getHostPath()).append(":").append(vc.getContainerPath());
-    }
-    return volumesList.toString();
-  }
-
   private void launchContainer(ContainerLauncherEvent event) {
-    LOG.info("start container");
-    ContainerLaunchContext ctx = null;
-    if (event.getId() instanceof TaskId) {
-       ctx = buildContainerContext(null, event.getYacopConfig());
-    } else {
-      Map<String, LocalResource> localResources = new HashMap<>();
-      String resourceFileName = event.getResourceFileName();
-      String resourcePath = event.getResourceFilePath();
-      if (resourcePath != "") {
-        FileSystem fs = null;
-        try {
-          fs = FileSystem.get(new YarnConfiguration());
-          Path dst = new Path(fs.getHomeDirectory(), resourcePath);
-          boolean exists = fs.exists(dst);
-          if(exists) {
-            FileStatus scFileStatus = fs.getFileStatus(dst);
-            LocalResource scRsrc = LocalResource.newInstance(
-                ConverterUtils.getYarnUrlFromURI(dst.toUri()), LocalResourceType.FILE,
-                LocalResourceVisibility.APPLICATION, scFileStatus.getLen(),
-                scFileStatus.getModificationTime());
-            localResources.put(resourceFileName, scRsrc);          	
-          }
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-      ctx = buildContainerContext(localResources, event.getYacopConfig());
-    }
+    ContainerLaunchContext ctx = delegatingYacopEngine.buildContainerContext(event);
     if (ctx == null) {
       LOG.info("ContainerLaunchContext is null");
     } else {
