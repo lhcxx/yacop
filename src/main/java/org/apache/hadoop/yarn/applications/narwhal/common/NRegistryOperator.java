@@ -183,7 +183,15 @@ public class NRegistryOperator {
   private void initServiceRecord() {
     appRecord = new ServiceRecord();
     appRecord.description = "Narwhal Application Master";
-    containerRecords = new HashMap<String, ServiceRecord>();
+    //containerRecords = new HashMap<String, ServiceRecord>();
+    try {
+      containerRecords = resolveContainers();
+      if (containerRecords == null) {
+        containerRecords = new HashMap<String, ServiceRecord>();	  
+	  }
+	} catch (IOException e) {
+	  e.printStackTrace();
+	}
   }
 
   private ServiceRecord initContainerServiceRecord() {

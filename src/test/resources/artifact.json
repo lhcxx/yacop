@@ -7,6 +7,17 @@
     'engine': {
         'type': 'DOCKER',
         'image': 'centos',
-        'localImage': true
+        'localImage': true,
+        'network': {
+            'mode': 'overlay',
+            'name': 'demo_overlay'
+        },
+        'volumes':[
+            {
+                'containerPath': '/etc/a',
+                'hostPath': '/var/data/a',
+                'mode': 'RO'
+            }
+        ]
     }
 }

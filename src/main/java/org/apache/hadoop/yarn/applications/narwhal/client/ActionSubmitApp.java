@@ -219,7 +219,7 @@ public class ActionSubmitApp implements ClientAction {
     try {
       config = NarwhalConfigParser.parse(configFileContent);
     } catch (BuilderException | JSONException e) {
-      // TODO
+      LOG.info(e.getMessage());
     }
     return config;
   }

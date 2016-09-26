@@ -2,6 +2,8 @@ package org.apache.hadoop.yarn.applications.narwhal.config;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.hadoop.yarn.applications.narwhal.config.NetworkConfig.Builder;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -65,6 +67,14 @@ public class NarwhalConfigParser {
                         .hostPath(volumeObj.getString("hostPath").trim())
                         .mode(volumeObj.getString("mode").trim()).build());
             }
+        }
+        if (obj.has("network")) {
+            JSONObject networkObj = obj.getJSONObject("network");
+            
+            NetworkConfig.Builder networkConfigBuilder = new NetworkConfig.Builder()
+                    .mode(networkObj.getString("mode").trim())
+                    .name(networkObj.getString("name").trim());
+            engineBuilder.addNetwork(networkConfigBuilder.build());
         }
         return engineBuilder.build();
     }

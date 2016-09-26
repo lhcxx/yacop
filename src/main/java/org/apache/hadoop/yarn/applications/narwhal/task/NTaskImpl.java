@@ -170,7 +170,7 @@ public class NTaskImpl implements Task, EventHandler<TaskEvent>{
       Container allocatedContainer = nTask.container;
       String containerIdStr = allocatedContainer.getId().toString();
       nTask.nRegistryOperator.setContainerRecord(containerIdStr, NarwhalConstant.HOST, allocatedContainer.getNodeId().getHost());
-      nTask.nRegistryOperator.setContainerRecord(containerIdStr, NarwhalConstant.PORT, String.valueOf(allocatedContainer.getNodeId().getPort()));
+//      nTask.nRegistryOperator.setContainerRecord(containerIdStr, NarwhalConstant.PORT, String.valueOf(allocatedContainer.getNodeId().getPort()));
       nTask.nRegistryOperator.setContainerRecord(containerIdStr, NarwhalConstant.CREATED, DateUtil.getCurrentTime());
       nTask.nRegistryOperator.setContainerRecord(containerIdStr, NarwhalConstant.STATUS, TaskState.SCHEDULED.toString());
       nTask.nRegistryOperator.updateContainer(containerIdStr);

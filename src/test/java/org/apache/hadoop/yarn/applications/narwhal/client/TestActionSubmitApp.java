@@ -56,6 +56,7 @@ public class TestActionSubmitApp {
 
   @Test
   public void testInitWithRightParameters() throws ParseException {
+	//Currently this case fail caused by isNetworkExits will call the docker command, will improve after rafactor
     String[] args = {
             "-jar", NAppMasterJar, "-configFile", "target/test-classes/artifact.json"
     };

@@ -40,6 +40,11 @@ public class NarwhalConfig implements Serializable {
                 .append("engine_type: " + this.engineConfig.getType() + "\n")
                 .append("engine_image: " + this.engineConfig.getImage() + "\n")
                 .append("engine_localImage: " + this.engineConfig.isLocalImage() + "\n");
+        
+        if(this.engineConfig.getNetworkConfig() != null) {
+            narwhalConfig.append("engine_network_mode: " + this.engineConfig.getNetworkConfig().getMode() + "\n");
+            narwhalConfig.append("engine_network_name: " + this.engineConfig.getNetworkConfig().getName() + "\n"); 
+        }
 
         for (VolumeConfig vc : this.engineConfig.getVolumeConfigs()) {
             narwhalConfig.append("engine_volume_containerPath: " + vc.getContainerPath() + "\n")
@@ -87,6 +92,10 @@ public class NarwhalConfig implements Serializable {
 
     public List<VolumeConfig> getVolumeConfigs() {
         return engineConfig.getVolumeConfigs();
+    }
+    
+    public NetworkConfig getNetworkConfig() {
+        return engineConfig.getNetworkConfig();
     }
 
     static class Builder {

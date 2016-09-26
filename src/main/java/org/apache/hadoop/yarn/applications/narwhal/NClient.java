@@ -1,16 +1,13 @@
 package org.apache.hadoop.yarn.applications.narwhal;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.yarn.applications.narwhal.client.ActionListRegistedApp;
-import org.apache.hadoop.yarn.applications.narwhal.client.ActionResolve;
-import org.apache.hadoop.yarn.applications.narwhal.client.ActionSubmitApp;
-import org.apache.hadoop.yarn.applications.narwhal.client.ClientAction;
+import org.apache.hadoop.yarn.applications.narwhal.client.*;
 import org.apache.hadoop.yarn.applications.narwhal.common.Log4jUtil;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+
+import java.io.IOException;
 
 /**
  * This is the Narwhal Client
@@ -33,6 +30,9 @@ public class NClient {
         break;
       case ClientAction.REGISTRY:
         action = new ActionListRegistedApp();
+        break;
+      case ClientAction.PUBLISH:
+        action = new ActionDoPortMapping();
         break;
       default:
         throw new IllegalArgumentException("unknown command");

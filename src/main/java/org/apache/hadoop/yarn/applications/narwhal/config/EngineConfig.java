@@ -13,12 +13,15 @@ public class EngineConfig implements Serializable {
 
     private final boolean localImage;
 
+    private final NetworkConfig networkConfig;
+    
     private final List<VolumeConfig> volumeConfigs ;
 
     private EngineConfig(Builder builder) {
         this.type = builder.type;
         this.image = builder.image;
         this.localImage = builder.localImage;
+        this.networkConfig = builder.networkConfig;
         this.volumeConfigs = builder.volumeConfigs;
     }
 
@@ -32,6 +35,10 @@ public class EngineConfig implements Serializable {
 
     boolean isLocalImage() {
         return localImage;
+    }
+    
+    NetworkConfig getNetworkConfig() {
+        return networkConfig;
     }
 
     public List<VolumeConfig> getVolumeConfigs() {
@@ -49,6 +56,8 @@ public class EngineConfig implements Serializable {
         private String image;
 
         private boolean localImage = true;
+        
+        private NetworkConfig networkConfig;
 
         private List<VolumeConfig> volumeConfigs = new ArrayList<>();
 
@@ -74,6 +83,11 @@ public class EngineConfig implements Serializable {
 
         Builder addVolume(VolumeConfig volumeConfig) {
             this.volumeConfigs.add(volumeConfig);
+            return this;
+        }
+        
+        Builder addNetwork(NetworkConfig networkConfig) {
+            this.networkConfig = networkConfig;
             return this;
         }
 

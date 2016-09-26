@@ -1,6 +1,8 @@
 package org.apache.hadoop.yarn.applications.narwhal.config;
 
 import static org.junit.Assert.*;
+
+import org.codehaus.jettison.json.JSONException;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
@@ -41,4 +43,20 @@ public class TestNarwhalConfigParser {
         thrown.expectMessage("Invalid volume config");
         NarwhalConfigParser.parse(NarwhalConfigCorpus.testVolumeMountErrorNoHostPathInput);
     }
+    
+    //TODO: deal the test about these java code invoke shell script
+    public void testNetworkConfigParse() throws Exception {
+        NarwhalConfig config = NarwhalConfigParser.parse(NarwhalConfigCorpus.testNetworkInput);
+        String actual = config.toString();
+        String expected = NarwhalConfigCorpus.testNetworkOutput;
+        assertEquals(expected, actual);  
+    }
+
+    @org.junit.Test
+    public void testNetworkConfigParseWithEmptyName() throws Exception {
+        thrown.expect(BuilderException.class);
+        thrown.expectMessage("network cannot be empty");
+    	NarwhalConfigParser.parse(NarwhalConfigCorpus.testNetworkInputWithEmptyName);
+    }    
+
 }
