@@ -1,6 +1,6 @@
-# Narwhal
+# YACOP
 
-Narwhal is a YARN application for Docker container orchestration for YARN.
+YACOP(Yet Another Container Orchestration Platform) is a container orchestration platform for YARN.
 
 ## Features
 
@@ -18,14 +18,14 @@ Narwhal is a YARN application for Docker container orchestration for YARN.
 - [ ] Use MD5 hash to check if image has already been loaded
 - [ ] Support "YARN" containers
 
-## Setting up and running Narwhal
+## Setting up and running YACOP
 1. A LinuxContainerExecutor enabled hadoop cluster
 2. Enable YARN Registry for the cluster
-3. Prepare your Docker image. It should have the same user (and uid) in it which is also used when run Narwhal
-4. Clone, build and run Narwhal with the Docker image
+3. Prepare your Docker image. It should have the same user (and uid) in it which is also used when run YACOP
+4. Clone, build and run YACOP with the Docker image
 ```sh
-git clone https://github.com/intel-hadoop/Narwhal.git
-cd Narwhal
+git clone https://github.com/intel-hadoop/yacop.git
+cd yacop
 mvn clean package -DskipTests
 ```
 ```sh
@@ -46,14 +46,14 @@ cat <<'EOF' > artifact.json
 EOF
 ```
 ```sh
-yarn jar target/narwhal-1.0-SNAPSHOT.jar run -configFile artifact.json -jar target/narwhal-1.0-SNAPSHOT.jar
+yarn jar target/yacop-1.0-SNAPSHOT.jar run -configFile artifact.json -jar target/yacop-1.0-SNAPSHOT.jar
 ```
-## Narwhal client
+## YACOP client
 To list Docker container status of an applicatoin
 ```sh
-yarn jar target/narwhal-1.0-SNAPSHOT.jar resolve -applicationId <applicationId>
+yarn jar target/yacop-1.0-SNAPSHOT.jar resolve -applicationId <applicationId>
 ```
 To list all applications history
 ```sh
-yarn jar target/narwhal-1.0-SNAPSHOT.jar registry
+yarn jar target/yacop-1.0-SNAPSHOT.jar registry
 ```
