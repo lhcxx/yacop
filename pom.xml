@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.hadoop</groupId>
-  <artifactId>narwhal</artifactId>
+  <artifactId>yacop</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <properties>
@@ -144,7 +144,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.apache.hadoop.yarn.applications.narwhal.NClient</mainClass>
+              <mainClass>org.apache.hadoop.yarn.applications.yacop.NClient</mainClass>
             </manifest>
           </archive>
         </configuration>
