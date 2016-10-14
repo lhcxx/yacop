@@ -3,8 +3,6 @@ package org.apache.hadoop.yarn.applications.yacop.event;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.applications.yacop.config.YacopConfig;
 import org.apache.hadoop.yarn.applications.yacop.task.ExecutorID;
-import org.apache.hadoop.yarn.applications.yacop.task.TaskId;
-import org.apache.hadoop.yarn.applications.yacop.worker.WorkerId;
 import org.apache.hadoop.yarn.event.AbstractEvent;
 
 

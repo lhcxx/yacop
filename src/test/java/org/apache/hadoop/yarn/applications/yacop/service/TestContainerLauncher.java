@@ -8,14 +8,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 
 import java.lang.reflect.Field;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.hadoop.io.ArrayFile;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
+import org.apache.hadoop.yarn.applications.yacop.NAppMaster;
 import org.apache.hadoop.yarn.applications.yacop.NAppMaster.AppContext;
 import org.apache.hadoop.yarn.applications.yacop.config.YacopConfig;
 import org.apache.hadoop.yarn.applications.yacop.config.VolumeConfig;
@@ -26,8 +26,6 @@ import org.apache.hadoop.yarn.applications.yacop.event.ContainerLauncherEvent;
 import org.apache.hadoop.yarn.applications.yacop.event.ContainerLauncherEventType;
 import org.apache.hadoop.yarn.applications.yacop.event.JobEventType;
 import org.apache.hadoop.yarn.applications.yacop.job.NJobImpl;
-import org.apache.hadoop.yarn.applications.yacop.service.ContainerAllocator;
-import org.apache.hadoop.yarn.applications.yacop.service.ContainerLauncher;
 import org.apache.hadoop.yarn.applications.yacop.service.ContainerLauncher.NMCallback;
 import org.apache.hadoop.yarn.applications.yacop.task.ExecutorID;
 import org.apache.hadoop.yarn.applications.yacop.task.TaskId;
@@ -38,9 +36,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Matchers;
 
 public class TestContainerLauncher {
@@ -50,6 +46,7 @@ public class TestContainerLauncher {
   private AsyncDispatcher dispatcher;
   private NMClientAsync nmClientAsync;
   private NMCallback nmCallback;
+  private NAppMaster nAppMaster;
 
   @Before
   public void setup() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
@@ -68,6 +65,17 @@ public class TestContainerLauncher {
 
     NJobImpl nJob = mock(NJobImpl.class);
     when(appContext.getJob()).thenReturn(nJob);
+
+    nAppMaster = new NAppMaster();
+    YacopConfig yacopConfig = TestUtils.mockYacopConfig("simple-docker", "cat /proc/1/cgroup", "centos_yarn", 1.0, 32, 2, false, null, "DOCKER");
+    Field yacopConfigField = nAppMaster.getClass().getDeclaredField("yacopConfig");
+    yacopConfigField.setAccessible(true);
+    yacopConfigField.set(nAppMaster, yacopConfig);
+    Field appContextField = nAppMaster.getClass().getDeclaredField("context");
+    appContextField.setAccessible(true);
+    appContextField.set(nAppMaster, appContext);
+    when(appContext.getYacopConfig()).thenReturn(yacopConfig);
+
     containerLauncher = new ContainerLauncher(appContext);
     nmCallback = containerLauncher.new NMCallback();
 
@@ -157,21 +165,6 @@ public class TestContainerLauncher {
     nmCallback.onContainerStarted(mock(ContainerId.class), null);
     sleep(1000);
     verify(containerAllocator, times(0)).handle(Matchers.any(ContainerAllocatorEvent.class));
-  }
-
-  @Test
-  public void testgetMountVolumePairList() {
-    List<VolumeConfig> volumeConfigList = new ArrayList<>();
-    VolumeConfig test_volumeConfig_1 = TestUtils.mockVolumeConfig("/etc/a", "/var/data/a","RO");
-    VolumeConfig test_volumeConfig_2 = TestUtils.mockVolumeConfig("/etc/b", "/var/data/b","RO");
-    VolumeConfig test_volumeConfig_3 = TestUtils.mockVolumeConfig("/etc/c", "/var/data/c","RO");
-    volumeConfigList.add(test_volumeConfig_1);
-    volumeConfigList.add(test_volumeConfig_2);
-    volumeConfigList.add(test_volumeConfig_3);
-    YacopConfig yacopConfig = TestUtils.mockYacopConfig("simple-docker","cat /proc/1/cgroup","centos_yarn",1.0,32,2,false,volumeConfigList,"DOCKER");
-    String expected = "/var/data/a:/etc/a,/var/data/b:/etc/b,/var/data/c:/etc/c";
-    String actual = containerLauncher.getMountVolumePairList(yacopConfig);
-    assertEquals(expected, actual);
   }
 
   private void mockNMClientAsync() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
